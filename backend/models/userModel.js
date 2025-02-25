@@ -22,7 +22,10 @@ const userSchema = new mongoose.Schema(
             default: false
         },
     },
-    { timestamps: true } // Automatisch createdAt und updatedAt speichern
+    { timestamps:Date.now,
+        
+    }
+      // Automatisch createdAt und updatedAt speichern
 );
 
 const User = mongoose.model("User", userSchema);
