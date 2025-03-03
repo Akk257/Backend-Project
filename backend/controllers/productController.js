@@ -21,17 +21,17 @@ export const getProductById = async (req, res) => {
     }
 };
 
-//  Neues Produkt erstellen
+//  Produkt erstellen
 export const createProduct = async (req, res) => {
     try {
-        const { name, price, description } = req.body;
-        const newProduct = new Product({ name, price, description });
-        await newProduct.save();
-        res.status(201).json(newProduct);
+      const { title, description, price, image } = req.body;
+      const product = new Product({ title, description, price, image, user: req.user.id });
+      await product.save();
+      res.status(201).json(product);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+      res.status(500).json({ message: "Fehler beim Erstellen des Produkts", error });
     }
-};
+  };
 
 //  Produkt aktualisieren (z. B. Preis ändern)
 export const updateProduct = async (req, res) => {
@@ -47,10 +47,12 @@ export const updateProduct = async (req, res) => {
 //  Produkt löschen
 export const deleteProduct = async (req, res) => {
     try {
-        const deletedProduct = await Product.findByIdAndDelete(req.params.id);
-        if (!deletedProduct) return res.status(404).json({ message: "Produkt nicht gefunden" });
-        res.json({ message: "Produkt gelöscht" });
+      const product = await Product.findById(req.params.id);
+      if (!product) return res.status(404).json({ message: "Produkt nicht gefunden" });
+  
+      await product.deleteOne();
+      res.json({ message: "Produkt erfolgreich gelöscht" });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+      res.status(500).json({ message: "Fehler beim Löschen des Produkts", error });
     }
-};
+  };
