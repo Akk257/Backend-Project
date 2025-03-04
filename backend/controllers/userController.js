@@ -4,7 +4,9 @@ import jwt from "jsonwebtoken";
 
 export const registerUser = async (req, res) => {
     try {
-        const { name, email, password } = req.body;
+        const { name, email, password, confirmPassword } = req.body;
+
+        if (password !== confirmPassword) return res.status(400).json({ message: "Passwörter stimmen nicht überein" });
 
         const userExists = await User.findOne({ email });
         if (userExists) return res.status(400).json({ message: "Benutzer existiert bereits" });
@@ -13,7 +15,7 @@ export const registerUser = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         // Neuen Benutzer speichern
-        const user = await User.create({
+        const User = await User.create({
             name,
             email,
             password: hashedPassword,
