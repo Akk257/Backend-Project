@@ -2,6 +2,8 @@ import User from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
+
+
 export const registerUser = async (req, res) => {
     try {
         const { name, email, password, confirmPassword } = req.body;
@@ -15,7 +17,7 @@ export const registerUser = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         // Neuen Benutzer speichern
-        const User = await User.create({
+        const user = await User.create({
             name,
             email,
             password: hashedPassword,
@@ -41,7 +43,7 @@ export const loginUser = async (req, res) => {
 
         // JWT-Token erstellen
         const token = jwt.sign({ id: user._id, isAdmin: user.isAdmin }, process.env.JWT_SECRET, {
-            expiresIn: "1h",
+            expiresIn: "1h"
         });
 
         res.json({ token, user });
@@ -95,3 +97,4 @@ export const getAllUsers = async (req, res) => {
         res.status(500).json({ message: "Fehler beim Abrufen des Profils", error });
     }
 };
+
