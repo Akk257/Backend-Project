@@ -1,9 +1,7 @@
 import express from 'express';
-import multer from 'multer';
+import upload from "../middleware/upload.js"; // Importiere die Multer-Middleware
 import { createProduct, getProducts, createMultipleProducts, getProductById } from "../controllers/productController.js";
 import { productValidator } from "../middleware/productValidator.js"; // Importiere die Validator-Middleware
-
-const upload = multer({ dest: 'uploads/' }); // Multer für lokale Speicherung
 
 const router = express.Router();
 
