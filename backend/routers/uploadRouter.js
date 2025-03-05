@@ -1,54 +1,26 @@
-import { v2 as cloudinary } from 'cloudinary';
-import express from 'express';
-import fileUpload from 'express-fileupload'; // Middleware für Datei-Uploads
-import { validateImage } from "../middleware/fileUploadHelper.js";
-
+import express from "express";
+import multer from "multer";
+import { uploadImage } from "../controllers/uploadController.js";
 
 const router = express.Router();
 
-// Vor dem Upload prüfen
-try {
-  validateImage(req.file);
-  const result = await cloudinary.uploader.upload(req.file.path);
-  res.json({ message: "Upload erfolgreich!", url: result.secure_url });
-} catch (error) {
-  res.status(400).json({ message: error.message });
-}
-
-// Cloudinary-Konfiguration
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+// Multer-Konfiguration für lokale Speicherung
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/"); // Ordner, in dem die Bilder gespeichert werden
+  },
+  filename: (req, file, cb) => {
+    // Hier wird der Originalname genutzt; alternativ kann eine eigene Namensstrategie implementiert werden
+    cb(null, file.originalname);
+  },
 });
 
-// Middleware für Datei-Uploads aktivieren
-router.use(fileUpload({ useTempFiles: true, tempFileDir: '/tmp/' }));
+const upload = multer({ storage });
 
-// Bild-Upload-Route
-router.post('/upload', async (req, res) => {
-  try {
-    if (!req.files || !req.files.image) {
-      return res.status(400).json({ message: 'Kein Bild hochgeladen' });
-    }
-
-    const image = req.files.image;
-
-    // Bild auf Cloudinary hochladen
-    const result = await cloudinary.uploader.upload(image.tempFilePath, {
-      folder: 'uploads', // Optional: Cloudinary-Ordner
-    });
-
-    res.json({ message: 'Upload erfolgreich', url: result.secure_url });
-  } catch (error) {
-    res.status(500).json({ message: 'Fehler beim Hochladen', error });
-  }
-});
+// Route zum Hochladen von Bildern; erwartet ein einzelnes Bild im Feld "image"
+router.post("/upload", upload.single("image"), uploadImage);
 
 export default router;
-
-
-
 
 
 

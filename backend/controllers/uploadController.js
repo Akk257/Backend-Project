@@ -1,24 +1,17 @@
-const express = require('express');
-const router = express.Router();
-const cloudinary = require("../utils/cloudinary");
-const upload = require("../middleware/multer");
+import fs from 'fs';
 
- router.post('/upload', upload.single('image'), function (req, res) {
-  cloudinary.uploader.upload(req.file.path, function (err, result){
-    if(err) {
-      console.log(err);
-      return res.status(500).json({
-        success: false,
-        message: "Error"
-      })
+// Upload-Funktion für lokale Speicherung mit Multer
+export const uploadImage = async (req, res) => {
+  try {
+    // Mit Multer ist die Datei im req.file
+    if (!req.file) {
+      return res.status(400).json({ message: 'Kein Bild hochgeladen' });
     }
+    
+    // Optional: Weitere Validierungen oder Transformationen können hier erfolgen.
+    res.json({ message: 'Upload erfolgreich!', file: req.file.filename });
+  } catch (error) {
+    res.status(500).json({ message: 'Fehler beim Hochladen', error: error.message });
+  }
+};
 
-    res.status(200).json({
-      success: true,
-      message:"Uploaded!",
-      data: result
-    })
-  })
-});
-
-module.exports = router;
