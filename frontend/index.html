@@ -1,42 +1,49 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bild hochladen</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bild hochladen</title>
 </head>
 <body>
-    <h2>Bild hochladen</h2>
-    <form id="uploadForm" enctype="multipart/form-data">
-        <input type="file" id="imageInput" name="image" accept="image/*" required>
-        <button type="submit">Hochladen</button>
-    </form>
-    <p id="message"></p>
-    
-    <script>
-        document.getElementById("uploadForm").addEventListener("submit", async function(event) {
-            event.preventDefault();
-            const formData = new FormData();
-            const fileInput = document.getElementById("imageInput");
-            
-            if (fileInput.files.length === 0) {
-                document.getElementById("message").textContent = "Bitte ein Bild auswählen.";
-                return;
-            }
-            
-            formData.append("image", fileInput.files[0]);
-            
-            try {
-                const response = await fetch("http://localhost:3000/api/upload", {
-                    method: "POST",
-                    body: formData
-                });
-                const result = await response.json();
-                document.getElementById("message").textContent = result.message || "Upload erfolgreich!";
-            } catch (error) {
-                document.getElementById("message").textContent = "Fehler beim Hochladen.";
-            }
+  <h2>Bild hochladen</h2>
+  <form id="uploadForm" enctype="multipart/form-data">
+    <input type="file" id="imageInput" name="image" accept="image/*" required>
+    <button type="submit">Hochladen</button>
+  </form>
+  <p id="message"></p>
+
+  <script>
+    document.getElementById("uploadForm").addEventListener("submit", async function (event) {
+      event.preventDefault();
+      const formData = new FormData();
+      const fileInput = document.getElementById("imageInput");
+
+      if (fileInput.files.length === 0) {
+        document.getElementById("message").textContent = "Bitte ein Bild auswählen.";
+        return;
+      }
+
+      formData.append("image", fileInput.files[0]);
+
+      try {
+        const response = await fetch("http://localhost:3000/api/upload", {
+          method: "POST",
+          body: formData,
         });
-    </script>
+        const result = await response.json();
+        document.getElementById("message").textContent = result.message || "Upload erfolgreich!";
+        if (result.url) {
+          const img = document.createElement("img");
+          img.src = result.url;
+          img.alt = "Hochgeladenes Bild";
+          img.width = 300; // Optional: Bildgröße anpassen
+          document.body.appendChild(img);
+        }
+      } catch (error) {
+        document.getElementById("message").textContent = "Fehler beim Hochladen.";
+      }
+    });
+  </script>
 </body>
 </html>
