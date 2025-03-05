@@ -2,13 +2,25 @@ import User from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
+
+
 export const registerUser = async (req, res) => {
     try {
+<<<<<<< HEAD
+        const { name, email, password, confirmPassword } = req.body;
+
+        if (password !== confirmPassword) return res.status(400).json({ message: "Passwörter stimmen nicht überein" });
+
+        const userExists = await User.findOne({ email });
+        if (userExists) return res.status(400).json({ message: "Benutzer existiert bereits" });
+
+=======
       const { name, email, password } = req.body;
   
       const userExists = await User.findOne({ email });
       if (userExists) return res.status(400).json({ message: "Benutzer existiert bereits" });
   
+>>>>>>> dev
         // Passwort verschlüsseln
         const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -26,6 +38,23 @@ export const registerUser = async (req, res) => {
 // Benutzer einloggen
 export const loginUser = async (req, res) => {
     try {
+<<<<<<< HEAD
+        const { email, password } = req.body;
+
+        const user = await User.findOne({ email });
+        if (!user) return res.status(400).json({ message: "Ungültige Anmeldedaten" });
+
+        // Passwort überprüfen
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) return res.status(400).json({ message: "Ungültige Anmeldedaten" });
+
+        // JWT-Token erstellen
+        const token = jwt.sign({ id: user._id, isAdmin: user.isAdmin }, process.env.JWT_SECRET, {
+            expiresIn: "1h"
+        });
+
+        res.json({ token, user });
+=======
       const { email, password } = req.body;
   
       const user = await User.findOne({ email });
@@ -41,6 +70,7 @@ export const loginUser = async (req, res) => {
       });
   
       res.json({ token, user });
+>>>>>>> dev
     } catch (error) {
       res.status(500).json({ message: "Fehler beim Login", error: error.message });
     }
@@ -91,3 +121,4 @@ export const getAllUsers = async (req, res) => {
         res.status(500).json({ message: "Fehler beim Abrufen des Profils", error });
     }
 };
+

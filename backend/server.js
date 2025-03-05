@@ -14,13 +14,15 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 /* // Statische Dateien bereitstellen (optional)
-app.use("/uploads", express.static("uploads"));
- */
-
-// API-Routen
 app.use("/api/users", userRoutes);
 app.use("/api/upload", uploadRouter);
 app.use("/api/products", productRoutes);
+app.use("/api/users", userRoutes);
+// app.use("/api/upload", uploadRouter);
+
+
+
+=======
 
 
 
