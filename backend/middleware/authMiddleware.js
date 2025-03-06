@@ -1,4 +1,7 @@
 import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const authMiddleware = (req, res, next) => {
     const token = req.header("Authorization");
@@ -12,7 +15,7 @@ const authMiddleware = (req, res, next) => {
         req.user = decoded;
         next();
     } catch (error) {
-        res.status(401).json({ message: "Ungültiges Token!" });
+        res.status(401).json({ message: "Ungültiges oder abgelaufenes Token!" });
     }
 };
 

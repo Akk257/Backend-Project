@@ -1,13 +1,15 @@
-
-
 const transformMessage = (transformation) => {
-    const innereFunktion = (req, res, next) => {
-      if (transformation === "lowercase") {
-        req.message = req.message.toLowerCase();
+  return (req, res, next) => {
+      if (req.body.message) {
+          if (transformation === "lowercase") {
+              req.body.message = req.body.message.toLowerCase();
+          }
+          if (transformation === "uppercase") {
+              req.body.message = req.body.message.toUpperCase();
+          }
       }
       next();
-    };
-    return innereFunktion;
   };
+};
 
 export default transformMessage;

@@ -9,8 +9,7 @@ export const productValidator = [
     .withMessage("Preis muss eine Zahl sein")
     .notEmpty()
     .withMessage("Preis ist erforderlich"),
-  body("category").notEmpty().withMessage("Kategorie ist erforderlich"),
-  body("weight")
+    body("category").optional().isString().withMessage("Kategorie muss ein Text sein"),    body("weight")
     .isNumeric()
     .withMessage("Gewicht muss eine Zahl sein")
     .optional(), // optional, aber wenn angegeben, muss es eine Zahl sein
