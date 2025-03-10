@@ -1,59 +1,42 @@
 import Product from "../models/productModel.js";  // WICHTIG! 
-import { validationResult } from "express-validator";
 
-// Alle Produkte abrufen
 export const getProducts = async (req, res) => {
   try {
-    const products = await Product.find();
+    console.log("🔍 Suchanfrage:", req.query); // ✅ Debugging
+
+    const { query, category, minPrice, maxPrice } = req.query;
+
+    let filter = {};
+
+    // Falls eine Suchanfrage existiert (nach Titel oder Beschreibung)
+    if (query) {
+      filter.$or = [
+        { title: { $regex: query, $options: "i" } },
+        { description: { $regex: query, $options: "i" } }
+      ];
+    }
+
+    // Falls eine Kategorie ausgewählt wurde
+    if (category && category !== "Alle Kategorien") {
+      filter.category = category;
+    }
+
+    // Falls ein Preisbereich angegeben wurde
+    if (minPrice || maxPrice) {
+      filter.price = {};
+      if (minPrice) filter.price.$gte = parseFloat(minPrice);
+      if (maxPrice) filter.price.$lte = parseFloat(maxPrice);
+    }
+
+    // Produkte aus der Datenbank abrufen
+    const products = await Product.find(filter);
     res.json(products);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Fehler beim Abrufen der Produkte", error: error.message });
   }
 };
 
-/*
-router.get("/:category", getProductById);
-router.get("/:price", getProductById);
-*/
 
-//  Einzelnes Produkt abrufen
-export const getProductByFilter = async (req, res) => {
-  const query = {};
-  if (req.params.title) {
-    query.title = req.params.title;
-  }
-  if (req.params.category) {
-    query.category = req.params.category;
-  }
-  if (req.params.price) {
-    query.price = req.params.price;
-  }
-  try {
-    const product = await Product.findOne(query);
-    if (!product)
-      return res.status(404).json({ message: "Produkt nicht gefunden" });
-    res.json(product);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-
-  //   // Optional: Wenn ein Query-Parameter "q" angegeben ist, wird gesucht.
-  //   if (req.query.q) {
-  //     const query = req.query.q;
-  //     const products = await Product.find({
-  //       $or: [
-  //         { title: { $regex: query, $options: "i" } },
-  //         { description: { $regex: query, $options: "i" } },
-  //         { category: { $regex: query, $options: "i" } }
-  //       ]
-  //     });
-  //     return res.json(products);
-  //   }
-  //   const products = await Product.find();
-  //   res.json(products);
-  // } catch (error) {
-  //   res.status(500).json({ message: "Fehler beim Abrufen der Produkte", error: error.message });
-  // }
-};
 
 // Einzelnes Produkt abrufen
 export const getProductById = async (req, res) => {
@@ -63,27 +46,26 @@ export const getProductById = async (req, res) => {
     res.json(product);
   } catch (error) {
     res.status(500).json({ message: "Fehler beim Abrufen des Produkts", error: error.message });
-
   }
 };
 
 // Produkt erstellen
 export const createProduct = async (req, res) => {
-  // Validierungsfehler prüfen
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-
   try {
-    const { title, description, price, category, weight } = req.body;
-    const newProduct = new Product({ title, description, price, category, weight });
+    const { title, description, price, category } = req.body;
+
+    // Falls ein Bild hochgeladen wurde, speichere den Dateipfad
+    const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
+
+    const newProduct = new Product({ title, description, price, category, image: imagePath });
     await newProduct.save();
-    res.status(201).json(newProduct);
+
+    res.status(201).json({ message: "Produkt erfolgreich erstellt!", product: newProduct });
   } catch (error) {
     res.status(500).json({ message: "Fehler beim Erstellen des Produkts", error: error.message });
   }
 };
+
 
 
 // Produkt erstellen (Mehrere Produkte)
@@ -101,12 +83,24 @@ export const createMultipleProducts = async (req, res) => {
 
 
 
-// Produkt aktualisieren
+// Produkt bearbeiten
 export const updateProduct = async (req, res) => {
   try {
-    const updatedProduct = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!updatedProduct) return res.status(404).json({ message: "Produkt nicht gefunden" });
-    res.json(updatedProduct);
+    const { title, description, price, category } = req.body;
+    const updateData = { title, description, price, category };
+
+    // Falls ein neues Bild hochgeladen wurde, aktualisieren
+    if (req.file) {
+      updateData.image = `/uploads/${req.file.filename}`;
+    }
+
+    const updatedProduct = await Product.findByIdAndUpdate(req.params.id, updateData, { new: true });
+
+    if (!updatedProduct) {
+      return res.status(404).json({ message: "Produkt nicht gefunden!" });
+    }
+
+    res.json({ message: "Produkt erfolgreich aktualisiert!", product: updatedProduct });
   } catch (error) {
     res.status(500).json({ message: "Fehler beim Aktualisieren des Produkts", error: error.message });
   }
@@ -115,36 +109,48 @@ export const updateProduct = async (req, res) => {
 // Produkt löschen
 export const deleteProduct = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
-    if (!product) return res.status(404).json({ message: "Produkt nicht gefunden" });
-    await product.deleteOne();
-    res.json({ message: "Produkt erfolgreich gelöscht" });
+    const product = await Product.findByIdAndDelete(req.params.id);
+
+    if (!product) {
+      return res.status(404).json({ message: "Produkt nicht gefunden!" });
+    }
+
+    res.json({ message: "Produkt erfolgreich gelöscht!" });
   } catch (error) {
     res.status(500).json({ message: "Fehler beim Löschen des Produkts", error: error.message });
   }
 };
 
-// Neue Funktion: Produkte suchen (Teilübereinstimmung)
+
+
 export const searchProducts = async (req, res) => {
   try {
-    let query = req.query.q;
+    let { query, category } = req.query;
+
     if (!query) {
       return res.status(400).json({ message: "Kein Suchbegriff angegeben" });
     }
 
-    // Entferne "alle" und "teil" aus der Suche
-    query = query.replace(/\balle\b/g, "").replace(/\bteil\b/g, "");
+    // Regex so anpassen, dass Teilwörter gefunden werden
+    const regexQuery = `.*${query}.*`;
 
-    const products = await Product.find({
+    let filter = {
       $or: [
-        { title: { $regex: query, $options: "i" } },
-        { description: { $regex: query, $options: "i" } },
-        { category: { $regex: query, $options: "i" } }
-      ]
-    });
+        { title: { $regex: regexQuery, $options: "i" } }, // Suche im Titel (Teilübereinstimmung)
+        { description: { $regex: regexQuery, $options: "i" } }, // Suche in der Beschreibung
+      ],
+    };
+
+    if (category && category !== "Alle Kategorien") {
+      filter.category = category;
+    }
+
+    const products = await Product.find(filter);
     res.json(products);
   } catch (error) {
-    res.status(500).json({ message: "Fehler beim Suchen der Produkte", error: error.message });
+    res.status(500).json({ message: "Fehler bei der Produktsuche", error: error.message });
   }
 };
+
+
 

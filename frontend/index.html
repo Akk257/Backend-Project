@@ -1,42 +1,19 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bild hochladen</title>
-</head>
-<body>
-    <h2>Bild hochladen</h2>
-    <form id="uploadForm" enctype="multipart/form-data">
-        <input type="file" id="imageInput" name="image" accept="image/*" required>
-        <button type="submit">Hochladen</button>
-    </form>
-    <p id="message"></p>
-    
-    <script>
-        document.getElementById("uploadForm").addEventListener("submit", async function(event) {
-            event.preventDefault();
-            const formData = new FormData();
-            const fileInput = document.getElementById("imageInput");
-            
-            if (fileInput.files.length === 0) {
-                document.getElementById("message").textContent = "Bitte ein Bild auswählen.";
-                return;
-            }
-            
-            formData.append("image", fileInput.files[0]);
-            
-            try {
-                const response = await fetch("http://localhost:3000/api/upload", {
-                    method: "POST",
-                    body: formData
-                });
-                const result = await response.json();
-                document.getElementById("message").textContent = result.message || "Upload erfolgreich!";
-            } catch (error) {
-                document.getElementById("message").textContent = "Fehler beim Hochladen.";
-            }
-        });
-    </script>
-</body>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vintage & New</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+  <script
+  src="https://maps.googleapis.com/maps/api/js?key=DEIN_GOOGLE_API_KEY&libraries=places">
+</script>
+
 </html>
