@@ -1,39 +1,41 @@
 import Product from "../models/productModel.js";  // WICHTIG! 
-import { validationResult } from "express-validator";
 
-// Alle Produkte abrufen
 export const getProducts = async (req, res) => {
   try {
-    const { q, category, minPrice, maxPrice } = req.query;
+    console.log("🔍 Suchanfrage:", req.query); // ✅ Debugging
+
+    const { query, category, minPrice, maxPrice } = req.query;
 
     let filter = {};
 
-    // Suche nach Titel oder Beschreibung
-    if (q) {
+    // Falls eine Suchanfrage existiert (nach Titel oder Beschreibung)
+    if (query) {
       filter.$or = [
-        { title: { $regex: q, $options: "i" } },
-        { description: { $regex: q, $options: "i" } }
+        { title: { $regex: query, $options: "i" } },
+        { description: { $regex: query, $options: "i" } }
       ];
     }
 
-    // Filter nach Kategorie
-    if (category) {
+    // Falls eine Kategorie ausgewählt wurde
+    if (category && category !== "Alle Kategorien") {
       filter.category = category;
     }
 
-    // Filter nach Preisbereich
+    // Falls ein Preisbereich angegeben wurde
     if (minPrice || maxPrice) {
       filter.price = {};
       if (minPrice) filter.price.$gte = parseFloat(minPrice);
       if (maxPrice) filter.price.$lte = parseFloat(maxPrice);
     }
 
+    // Produkte aus der Datenbank abrufen
     const products = await Product.find(filter);
     res.json(products);
   } catch (error) {
     res.status(500).json({ message: "Fehler beim Abrufen der Produkte", error: error.message });
   }
 };
+
 
 
 // Einzelnes Produkt abrufen
@@ -121,26 +123,34 @@ export const deleteProduct = async (req, res) => {
 
 
 
-// Neue Funktion: Produkte suchen (Teilübereinstimmung)
 export const searchProducts = async (req, res) => {
   try {
-    let query = req.query.q;
+    let { query, category } = req.query;
+
     if (!query) {
       return res.status(400).json({ message: "Kein Suchbegriff angegeben" });
     }
 
-    // Entferne "alle" und "teil" aus der Suche
-    query = query.replace(/\balle\b/g, "").replace(/\bteil\b/g, "");
+    // Regex so anpassen, dass Teilwörter gefunden werden
+    const regexQuery = `.*${query}.*`;
 
-    const products = await Product.find({
+    let filter = {
       $or: [
-        { title: { $regex: query, $options: "i" } },
-        { description: { $regex: query, $options: "i" } },
-        { category: { $regex: query, $options: "i" } }
-      ]
-    });
+        { title: { $regex: regexQuery, $options: "i" } }, // Suche im Titel (Teilübereinstimmung)
+        { description: { $regex: regexQuery, $options: "i" } }, // Suche in der Beschreibung
+      ],
+    };
+
+    if (category && category !== "Alle Kategorien") {
+      filter.category = category;
+    }
+
+    const products = await Product.find(filter);
     res.json(products);
   } catch (error) {
-    res.status(500).json({ message: "Fehler beim Suchen der Produkte", error: error.message });
+    res.status(500).json({ message: "Fehler bei der Produktsuche", error: error.message });
   }
 };
+
+
+
